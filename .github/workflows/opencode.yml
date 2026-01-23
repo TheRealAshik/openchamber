@@ -31,7 +31,6 @@ jobs:
       # PERSISTENCE: Restore previous session (OAuth, chats, config)
       # ============================================================
       - name: Restore Session Data (Artifact)
-        if: ${{ env.OPENCODE_SERVER_PASSWORD != '' }}
         uses: dawidd6/action-download-artifact@v6
         continue-on-error: true
         with:
@@ -44,7 +43,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Apply Restored Session Data
-        if: ${{ env.OPENCODE_SERVER_PASSWORD != '' }}
         env:
           OPENCODE_SERVER_PASSWORD: ${{ env.OPENCODE_SERVER_PASSWORD }}
         run: |
@@ -213,7 +211,7 @@ jobs:
       # PERSISTENCE: Save all session data (always runs)
       # ============================================================
       - name: Prepare Session Data for Save
-        if: ${{ always() && env.OPENCODE_SERVER_PASSWORD != '' }}
+        if: ${{ always() }}
         env:
           OPENCODE_SERVER_PASSWORD: ${{ env.OPENCODE_SERVER_PASSWORD }}
         run: |
@@ -221,7 +219,7 @@ jobs:
           SAVE_DIR=/tmp/opencode-save ./scripts/persistence-save.sh
 
       - name: Upload Session Data (Artifact)
-        if: ${{ always() && env.OPENCODE_SERVER_PASSWORD != '' }}
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: opencode-session
