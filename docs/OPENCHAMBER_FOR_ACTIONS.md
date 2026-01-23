@@ -1,50 +1,102 @@
-# OpenChamber for Actions
+# 🚀 OpenChamber for Actions
 
-**Version:**  `v0.1.0-preview`
+**Version:** `v0.1.0-preview`  
+**Status:** Preview
 
-OpenChamber for Actions allows you to run a full OpenChamber environment remotely using GitHub Actions infrastructure. It provides access to OpenCode, OpenChamber, and a web-based terminal without requiring any local hardware.
+OpenChamber for Actions lets you run a **full OpenChamber environment in the cloud** using GitHub Actions.  
+It provides OpenCode, OpenChamber, and a web-based terminal — **no local hardware required**.
+
+---
+
+## 📋 Table of Contents
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Quick Start](#quick-start)
+- [Beginners' Guide](#beginners-guide)
+- [Installation Guide](#installation-guide)
+- [FAQ](#frequently-asked-questions-faq)
+- [Technical Specifications](#technical-specifications)
 
 ---
 
 ## Overview
 
-OpenChamber for Actions is a "computer in the cloud" solution that leverages GitHub Runners to host a temporary development environment. It spins up three key services:
-*   **OpenCode TTY:** A web-based terminal for command-line access.
-*   **OpenChamber:** The core environment.
-*   **OpenCode Web:** The web interface for coding and interaction.
+OpenChamber for Actions works like a **temporary cloud computer** powered by GitHub-hosted runners.  
+During execution, it starts the following services:
 
-These services are exposed via secure tunnels (Cloudflare or Ngrok), allowing you to access them from any browser. The session can persist data between runs using GitHub Artifacts.
+- **OpenCode Web UI** — browser-based development interface  
+- **OpenCode TTY** — web-accessible terminal  
+- **OpenChamber Core** — main runtime service  
+
+### Runtime Access
+> URLs are printed in the workflow logs once the job starts.
+
+### Default Usernames
+> [!IMPORTANT]
+> These are **usernames only**, not passwords.
+>
+> - **OpenCode TTY:** `user`  
+> - **OpenCode Web:** `opencode`
+
+### Security & Persistence
+Services are exposed using secure tunnels (Cloudflare or Ngrok).  
+Session data can be stored using GitHub Artifacts.
+
+> [!WARNING]
+> **Password authentication is currently not functional.**  
+> This will be fixed in a future update.  
+>
+> **Until then:**  
+> - Use this workflow **only in private repositories**  
+> - **Do not** rely on `OPENCODE_SERVER_PASSWORD`  
+> - Avoid exposing public URLs with sensitive data  
 
 ---
 
 ## Key Features
 
-*   **No local hardware required:** Run OpenChamber on GitHub Actions infrastructure.
-*   **OpenCode integration:** Access the OpenCode suite and "Antigravity" model selection (including Gemini 3 and Claude 4.5).
-*   **Secure access (optional):** Protect OpenChamber, OpenCode Web, and the TTY with `OPENCODE_SERVER_PASSWORD`.
-*   **Persistent sessions (optional):** Save login state, OAuth tokens, and configuration as GitHub Artifacts when a password is set (encrypted).
-*   **Self-healing tunnels:** Background monitoring keeps the tunnel stable.
+| Feature | Benefit |
+|------|------|
+| Cloud-based | Runs fully on GitHub Actions |
+| AI Integration | Antigravity model support (Gemini, Claude) |
+| Tunnel Access | Secure browser-based access |
+| Session Restore | Artifact-based persistence |
+| Auto Monitoring | Self-healing tunnel checks |
+| Cross-device | Works on desktop and mobile |
 
 ---
 
-## New to this? (Beginners' Guide)
+## Quick Start
+
+1. **Fork** this repository  
+2. Ensure the fork is **private**  
+3. **Run** the workflow  
+4. **Open** the URLs from workflow logs  
+
+> [!CAUTION]
+> Until password support is fixed, **do not run this in public repositories**.
+
+---
+
+## Beginners' Guide
 
 <details>
-<summary><b>Click to expand: What is this and how does it help me?</b></summary>
+<summary><b>What is this and who is it for?</b></summary>
 
-### 1. What exactly is this?
-Think of this as a "computer in the cloud." Instead of running a local AI environment, GitHub Actions provides the compute for you.
+### What is OpenChamber for Actions?
+It’s a short-lived development environment running on GitHub’s infrastructure instead of your local machine.
 
-### 2. What do I need to start?
-*   A GitHub account.
-*   A web browser (Chrome, Edge, Safari, etc.).
-*   No special hardware required.
+### What do I need?
+- A GitHub account  
+- A modern browser  
+- No server, GPU, or local setup  
 
-### 3. Why is Cloudflare recommended?
-Cloudflare Quick Tunnels create a secure public URL automatically. You do not need extra accounts or API keys, so it is the simplest option.
+### Why Cloudflare by default?
+Cloudflare Quick Tunnels require no account or API key and provide HTTPS automatically.
 
-### 4. What is persistence?
-When a password is set, the workflow saves your login info and settings as an encrypted GitHub Artifact. The next run restores the session so you can continue without logging in again.
+### What does persistence mean?
+Some session state can be stored as GitHub Artifacts and restored on the next run.
+
 </details>
 
 ---
@@ -52,14 +104,13 @@ When a password is set, the workflow saves your login info and settings as an en
 <details>
 <summary><b>Usage Limits & Quotas</b></summary>
 
-To ensure stability and compliance with GitHub’s Terms of Service, be aware of the following limits:
-
-| Limit Type | Constraint | Explanation |
-| :--- | :--- | :--- |
-| **Time Limit** | **6 Hours Max** | GitHub stops any job after 360 minutes. |
-| **Storage** | **2GB** | Session artifacts cannot exceed 2GB per repository. |
-| **Concurrency** | **1 Run Only** | Run a single OpenChamber instance at a time. |
-| **Hardware** | **2-Core CPU** | Standard Linux runners (~7GB RAM). |
+| Limit | Value | Notes |
+|----|----|----|
+| Max runtime | 6 hours | GitHub hard limit |
+| Artifact size | 2 GB | Per repository |
+| Concurrency | 1 run | Prevents conflicts |
+| Hardware | 2 vCPU / ~7GB RAM | Standard runner |
+| Retention | 90 days | GitHub default |
 
 </details>
 
@@ -67,58 +118,37 @@ To ensure stability and compliance with GitHub’s Terms of Service, be aware of
 
 ## Installation Guide
 
-### Option A: Easy Mode (Recommended)
-Uses Cloudflare tunnels. No configuration required unless you want password protection.
+### Option A: Easy Mode (Cloudflare) — Recommended
 
-1.  Fork this repository to your GitHub account.
-2.  Open the Actions tab in your fork.
-3.  Select the **OpenChamber for Actions** workflow.
-4.  (Optional) **Set a Password (recommended):**
-    *   Go to **Settings** -> **Secrets and variables** -> **Actions**.
-    *   Click **New repository secret**.
-    *   **Name:** `OPENCODE_SERVER_PASSWORD`
-    *   **Secret:** Your desired password.
-    *   *Note: If this secret is set, it protects OpenCode TTY, OpenChamber, and OpenCode Web. It also enables encrypted persistence.*
-5.  Click **Run workflow**.
-    *   **Tunnel Provider:** Choose `cloudflare` (default) or `ngrok`.
-    *   **Auto-shutdown after (minutes):** Set the duration (default `300`).
-6.  Wait about 30 seconds for setup to finish.
-7.  Open the run, then open the `serve` job.
-8.  Expand the **Monitor & Self-Heal** step to find the URLs and open them.
+1. Fork the repository (keep it **private**)  
+2. Open the **Actions** tab  
+3. Select **OpenChamber for Actions**  
+4. Run the workflow with default options  
+5. Wait ~30 seconds  
+6. Check the **Monitor & Self-Heal** step for URLs  
 
 > [!TIP]
-> Keep the repository visibility `Private` or use `OPENCODE_SERVER_PASSWORD` in Github Actions Secrets. Otherwise, your privacy can be violated.
+> No configuration is required for Cloudflare tunnels.
 
 ---
 
 ### Option B: Pro Mode (Ngrok)
 
 <details>
-<summary><b>Click to expand: Step-by-step guide for setting up Ngrok</b></summary>
+<summary><b>Ngrok setup</b></summary>
 
-If you prefer using Ngrok for a static domain, follow these steps to set up your API key.
+#### Step 1: Get Ngrok token
+- Sign in to Ngrok  
+- Copy your authtoken  
 
-#### Step 1: Get your authtoken
-1.  Log in or sign up at dashboard.ngrok.com.
-2.  In the sidebar, click "Your Authtoken."
-3.  Copy the token string (for example, `21xYz...`).
+#### Step 2: Add GitHub secret
+- Name: `NGROK_AUTH_TOKEN`  
+- Value: your token  
 
-#### Step 2: Add the secret to GitHub
-1.  Open your forked repository on GitHub.
-2.  Open Settings.
-3.  In the sidebar, open Secrets and variables and click Actions.
-4.  Click New repository secret.
-5.  **Name:** `NGROK_AUTH_TOKEN`.
-6.  **Secret:** Paste the token.
-7.  (Optional) Add `OPENCODE_SERVER_PASSWORD` to enable password protection for all services and encrypted persistence.
-8.  Click Add secret.
+#### Step 3: Run workflow
+- Select `ngrok` as tunnel provider  
+- URLs appear in workflow logs  
 
-#### Step 3: Run with Ngrok
-1.  Go to the Actions tab.
-2.  Select **OpenChamber for Actions**.
-3.  Click **Run workflow**.
-4.  Select `ngrok` as the Tunnel Provider.
-5.  Find the URL in the "Monitor & Self-Heal" step.
 </details>
 
 ---
@@ -126,41 +156,95 @@ If you prefer using Ngrok for a static domain, follow these steps to set up your
 ## Frequently Asked Questions (FAQ)
 
 <details>
-<summary><b>Q: Is this completely free?</b></summary>
-GitHub provides 2,000 minutes for private repositories and unlimited minutes for public repositories. This workflow uses those minutes.
+<summary><b>Is this free?</b></summary>
+
+It uses your GitHub Actions minutes:
+- Private repos: 2,000 minutes/month  
+- Public repos: unlimited  
+
 </details>
 
 <details>
-<summary><b>Q: Why did my session stop working after a few hours?</b></summary>
-GitHub Actions has a 6-hour job limit. The environment shuts down automatically. If persistence is enabled, your session data is restored on the next run.
+<summary><b>Why does it stop after a few hours?</b></summary>
+
+GitHub enforces a **6-hour job limit**.  
+The environment shuts down automatically.
+
 </details>
 
 <details>
-<summary><b>Q: Can I use this on my phone or tablet?</b></summary>
-Yes. Once you have a public URL (Cloudflare or Ngrok), open it in any mobile browser.
+<summary><b>Can I use it on mobile?</b></summary>
+
+Yes. Any modern mobile browser works.
+
 </details>
 
 <details>
-<summary><b>Q: Is my data private?</b></summary>
-If you fork this as a public repository, your code may be visible depending on how you save it. For maximum privacy, use a private fork. If you want persistence, set `OPENCODE_SERVER_PASSWORD` so the artifact is encrypted.
+<summary><b>Is my data secure?</b></summary>
+
+For now:
+- Use a **private repository**
+- Do not expose public URLs
+- Avoid sensitive data in logs
+
 </details>
 
 <details>
-<summary><b>Q: I see a "Connection Refused" error. What do I do?</b></summary>
-Wait about 30 seconds and refresh the page. If it persists, check the Monitor logs in the Actions run.
+<summary><b>Connection refused?</b></summary>
+
+Try:
+1. Waiting 30 seconds and refreshing  
+2. Checking workflow logs  
+3. Restarting the workflow  
+
 </details>
 
 ---
 
 ## Technical Specifications
 
-| Feature | Detail |
-| :--- | :--- |
-| **Version** | `v0.1.0-preview` |
-| **OS** | Ubuntu 22.04 LTS (GitHub Runner) |
-| **Node Version** | v20.x |
-| **Tunnel Protocols** | `cloudflared` (Argon) / `ngrok` (HTTP) |
-| **Artifact Retention** | 90 Days (Default GitHub Policy) |
+<details>
+<summary><b>System</b></summary>
 
-> [!NOTE]
-> This project is for educational and development purposes. Do not use this workflow for mining crypto or other activities banned by the GitHub Acceptable Use Policy.
+| Component | Specification |
+|----|----|
+| OS | Ubuntu 22.04 |
+| CPU | 2 cores (x86_64) |
+| RAM | ~7 GB |
+| Disk | ~14 GB (ephemeral) |
+
+</details>
+
+<details>
+<summary><b>Network & Ports</b></summary>
+
+| Service | Port |
+|----|----|
+| OpenCode Web | 3000 |
+| OpenCode TTY | 7681 |
+| Tunnel | 8080 |
+
+</details>
+
+<details>
+<summary><b>Security</b></summary>
+
+| Feature | Status |
+|----|----|
+| Password Auth | ❌ Not working (temporary) |
+| Artifact Encryption | Available |
+| Tunnel Security | TLS |
+| Session Isolation | Full |
+
+</details>
+
+---
+
+> [!WARNING]
+> **Legal Notice**
+>
+> This project is for **educational and development purposes only**.  
+> Do not use it for mining, abuse, or any activity violating GitHub policies.
+
+> [!TIP]
+> Workflow logs are the authoritative source for runtime status and access URLs.
