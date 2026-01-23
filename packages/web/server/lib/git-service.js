@@ -432,6 +432,65 @@ export async function getDiff(directory, { path, staged = false, contextLines = 
   }
 }
 
+export async function getRangeDiff(directory, { base, head, path, contextLines = 3 } = {}) {
+  const git = simpleGit(normalizeDirectoryPath(directory));
+  const baseRef = typeof base === 'string' ? base.trim() : '';
+  const headRef = typeof head === 'string' ? head.trim() : '';
+  if (!baseRef || !headRef) {
+    throw new Error('base and head are required');
+  }
+
+  // Prefer remote-tracking base ref so merged commits don't reappear
+  // when local base branch is stale (common when user stays on feature branch).
+  let resolvedBase = baseRef;
+  const originCandidate = `refs/remotes/origin/${baseRef}`;
+  try {
+    const verified = await git.raw(['rev-parse', '--verify', originCandidate]);
+    if (verified && verified.trim()) {
+      resolvedBase = `origin/${baseRef}`;
+    }
+  } catch {
+    // ignore
+  }
+
+  const args = ['diff', '--no-color'];
+  if (typeof contextLines === 'number' && !Number.isNaN(contextLines)) {
+    args.push(`-U${Math.max(0, contextLines)}`);
+  }
+  args.push(`${resolvedBase}...${headRef}`);
+  if (path) {
+    args.push('--', path);
+  }
+  const diff = await git.raw(args);
+  return diff;
+}
+
+export async function getRangeFiles(directory, { base, head } = {}) {
+  const git = simpleGit(normalizeDirectoryPath(directory));
+  const baseRef = typeof base === 'string' ? base.trim() : '';
+  const headRef = typeof head === 'string' ? head.trim() : '';
+  if (!baseRef || !headRef) {
+    throw new Error('base and head are required');
+  }
+
+  let resolvedBase = baseRef;
+  const originCandidate = `refs/remotes/origin/${baseRef}`;
+  try {
+    const verified = await git.raw(['rev-parse', '--verify', originCandidate]);
+    if (verified && verified.trim()) {
+      resolvedBase = `origin/${baseRef}`;
+    }
+  } catch {
+    // ignore
+  }
+
+  const raw = await git.raw(['diff', '--name-only', `${resolvedBase}...${headRef}`]);
+  return String(raw || '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+}
+
 const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'bmp', 'avif'];
 
 function isImageFile(filePath) {
