@@ -235,6 +235,21 @@ if [ -n "$ENCRYPTION_PASSWORD" ]; then
     
     echo "Encryption complete. Artifact is password-protected."
     echo "Encrypted file: $SAVE_DIR/session.enc"
+else
+    # For R2 mode without password, we need to create a single archive
+    if [ "$PERSISTENCE_MODE" = "r2" ]; then
+        echo ""
+        echo "=== Archiving Session Data (Unencrypted) ==="
+        TEMP_ARCHIVE="$SAVE_DIR/session.tar.gz"
+        # Create archive of contents
+        tar -czf "/tmp/session_temp.tar.gz" -C "$SAVE_DIR" .
+
+        # Clean directory and move archive back
+        rm -rf "$SAVE_DIR"/*
+        mv "/tmp/session_temp.tar.gz" "$TEMP_ARCHIVE"
+
+        echo "Archive created: $TEMP_ARCHIVE"
+    fi
 fi
 
 echo ""
@@ -250,15 +265,18 @@ if [ "$PERSISTENCE_MODE" = "r2" ]; then
         exit 1
     fi
 
-    if [ ! -f "$SAVE_DIR/session.enc" ]; then
-        echo "ERROR: Encrypted session file not found. Cannot upload to R2."
+    if [ -f "$SAVE_DIR/session.enc" ]; then
+        FILE_TO_UPLOAD="session.enc"
+    elif [ -f "$SAVE_DIR/session.tar.gz" ]; then
+        FILE_TO_UPLOAD="session.tar.gz"
+    else
+        echo "ERROR: No session file (enc or tar.gz) found to upload."
         exit 1
     fi
 
-    echo "Uploading session to R2 bucket: $R2_BUCKET_NAME"
-    if rclone copy "$SAVE_DIR/session.enc" "r2:$R2_BUCKET_NAME/"; then
+    echo "Uploading $FILE_TO_UPLOAD to R2 bucket: $R2_BUCKET_NAME"
+    if rclone copy "$SAVE_DIR/$FILE_TO_UPLOAD" "r2:$R2_BUCKET_NAME/"; then
         echo "Upload successful."
-        # Optional: Clean up to save space on runner, though job ends soon anyway
     else
         echo "ERROR: Upload failed."
         exit 1

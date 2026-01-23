@@ -45,8 +45,11 @@ elif [ "$PERSISTENCE_MODE" = "r2" ]; then
     echo "Downloading session from R2 bucket: $R2_BUCKET_NAME"
     mkdir -p "$RESTORE_DIR"
 
-    if rclone copy "r2:$R2_BUCKET_NAME/session.enc" "$RESTORE_DIR/"; then
-        echo "Download successful."
+    # Try downloading encrypted first, then fallback or check unencrypted
+    if rclone copy "r2:$R2_BUCKET_NAME/session.enc" "$RESTORE_DIR/" 2>/dev/null; then
+        echo "Download successful (Encrypted)."
+    elif rclone copy "r2:$R2_BUCKET_NAME/session.tar.gz" "$RESTORE_DIR/" 2>/dev/null; then
+        echo "Download successful (Unencrypted)."
     else
         echo "Warning: Download failed or session not found in R2."
     fi
@@ -85,6 +88,13 @@ if [ -f "$RESTORE_DIR/session.enc" ]; then
         rm -f "$TEMP_ARCHIVE"
         exit 0
     fi
+    echo ""
+elif [ -f "$RESTORE_DIR/session.tar.gz" ]; then
+    echo "=== Unencrypted Archive Detected ==="
+    echo "Extracting session data..."
+    tar -xzf "$RESTORE_DIR/session.tar.gz" -C "$RESTORE_DIR"
+    rm -f "$RESTORE_DIR/session.tar.gz"
+    echo "Extraction successful."
     echo ""
 fi
 
