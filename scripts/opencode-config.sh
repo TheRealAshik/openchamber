@@ -68,7 +68,7 @@ generate_default_config() {
     cat << 'EOF' > "$CONFIG_DIR/opencode.json"
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["opencode-antigravity-auth@beta"],
+  "plugin": ["opencode-antigravity-auth@latest"],
   "provider": {
     "google": {
       "models": {
